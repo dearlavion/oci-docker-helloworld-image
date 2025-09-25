@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helloworld-deployment-<userid>
+  namespace: ns-<userid>
+spec:
+  selector:
+    matchLabels:
+      app: helloworld
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: helloworld
+    spec:
+      containers:
+      - name: helloworld
+    # enter the path to your image, be sure to include the correct region prefix    
+        image: <region-key>.ocir.io/<tenancy-namespace>/<repo-name>:<tag>
+        ports:
+        - containerPort: 80
+      imagePullSecrets:
+    # enter the name of the secret you created  
+      - name: <secret-name>
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: helloworld-service-<userid>
+  namespace: ns-<userid>
+  annotations:
+    oci.oraclecloud.com/load-balancer-type: "lb"
+    service.beta.kubernetes.io/oci-load-balancer-shape: "flexible"
+    service.beta.kubernetes.io/oci-load-balancer-shape-flex-min: "10"
+    service.beta.kubernetes.io/oci-load-balancer-shape-flex-max: "100"
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: helloworld
